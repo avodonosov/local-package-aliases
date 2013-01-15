@@ -1,6 +1,7 @@
 * Local Package Aliases
   Allows to define inside of a package aliases to refer other packages.
-  Provides a reader macro =$= to use aliases.
+  Provides a reader macro =$= to use aliases. The =$= macro is only
+  active in packages having alias mapping, and does not affect other code.
   Portable.
   
 #+BEGIN_SRC lisp
