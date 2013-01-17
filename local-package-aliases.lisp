@@ -1,13 +1,15 @@
-;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8;  -*-
-;;; Copyright (C) 2012 Anton Vodonosov (avodonosov@yandex.ru)
-;;; See LICENSE for details.
+;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8;  -*-
+;;;; Copyright (C) 2013 Anton Vodonosov (avodonosov@yandex.ru)
+;;;; See LICENSE for details.
 
 (defpackage local-package-aliases
   (:use #:cl)
   (:shadow #:set)
   (:export #:set
            #:set-aliasing-reader
-           #:call-with-aliasing-readtable))
+           #:call-with-aliasing-readtable
+           #:hook-into-swank
+           #:unhook-from-swank))
 
 (in-package #:local-package-aliases)
 
@@ -18,7 +20,7 @@
          :format-control format-control
          :format-arguments format-arguments))
 
-;;; datastructure to store package aliases
+;;; datastructure to store package aliases ---------------------------
 
 (defparameter *package-to-aliases-map* (make-hash-table :test #'eq)
   "Mapping from package object to a hash-table of local aliases active in this package.
@@ -61,7 +63,7 @@ The hash-table of local aliases maps string alias to a package designator.")
                alias-table))
     aliases))
 
-;;; reader macro 
+;;; the reader macro ------------------------------------------
 
 (defun find-aliased-symbol (token)
   "TOEKN is a string in the form alias:symbol or alias::symbol."
@@ -122,7 +124,6 @@ The hash-table of local aliases maps string alias to a package designator.")
         (with-input-from-string (s (string char))
           (read (make-concatenated-stream s stream) t nil t)))))
 
-
 (defun set-aliasing-reader (to-readtable &optional (macro-char #\$) default-readtable)
   "Modifies TO-READTABLE so that MACRO-CHAR at the beginning a token in
 form $ALIAS:SYMBOL or $ALIAS::SYMBOL is used to refere other packages,
@@ -153,6 +154,8 @@ it's syntax is modified."
   (let ((*readtable* (aliasing-readtable)))
     (funcall thunk)))
 
+;;; slime support -------------------------------------------
+
 (defun call-with-nicknames (alias-table fn)
   "Helper function useful to hook into SLIME
 in order to provide completion, go-to-definition,
@@ -168,10 +171,14 @@ function parameters help and other SLIME support."
                             (push (cons (package-name package)
                                         (package-nicknames package))
                                   old-names)
-                            (rename-package package
-                                            (package-name package)
-                                            (cons (format nil "$~A" alias)
-                                                  (package-nicknames package))))))
+                            (handler-case
+                                (rename-package package
+                                                (package-name package)
+                                                (cons (format nil "$~A" alias)
+                                                      (package-nicknames package)))
+                              (serious-condition (e)
+                                (warn "local-package-aliases: can't add alias $~A as a nickname to the package ~A package: ~A"
+                                      alias package e))))))
                       alias-table))
            (funcall fn))
       ;; Restore the original nicknames.
@@ -182,3 +189,25 @@ function parameters help and other SLIME support."
         (rename-package (car old-name-nicknames)
                         (car old-name-nicknames)
                         (cdr old-name-nicknames))))))
+
+(defun swank-buffer-package ()
+  (ignore-errors (symbol-value (read-from-string "swank::*buffer-package*"))))
+
+(defun with-aliases-as-nicknames-hook (next-fn)
+  (call-with-nicknames (alias-table-for (swank-buffer-package))
+                       next-fn))
+
+(defun hook-into-swank ()
+  (load (asdf:system-relative-pathname :local-package-aliases "swank-patch.lisp"))
+  (format t "~&; swank patched by local-package-aliases to provide swank::*around-eval-for-emacs-hook*~%")
+  (pushnew 'with-aliases-as-nicknames-hook
+           (symbol-value (read-from-string "swank::*around-eval-for-emacs-hook*")))
+  (format t "~&; installed swank::*around-eval-for-emacs-hook* handler to temporary add aliases local to swank::*buffer-package* as nicknames to the corresponding packages~%"))
+
+(defun unhook-from-swank ()
+  "Returns T if the hook handler was uninstalled, and NIL otherwize."
+  (let* ((hook-var (find-symbol (string '#:*around-eval-for-emacs-hook*) :swank))
+         (hook-chain (and hook-var (symbol-value hook-var))))
+    (when (member 'with-aliases-as-nicknames-hook hook-chain)
+      (setf (symbol-value hook-var) (remove 'with-aliases-as-nicknames-hook hook-chain))
+      t)))
