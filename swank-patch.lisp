@@ -24,7 +24,7 @@
   (if around-hooks
       (apply (car around-hooks)
              (lambda ()
-               (call-within-hooks (cdr around-hooks) fn))
+               (apply #'call-within-hooks (cdr around-hooks) fn arguments))
              arguments)
       (apply fn arguments)))
 
@@ -52,6 +52,7 @@
   )
 
 |#
+
 
 (defvar *around-eval-for-emacs-hook* '()
   "Hook run (with empty argument list) by EVAL-FOR-EMACS around the expression received with an RPC.")
