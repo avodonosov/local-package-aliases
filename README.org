@@ -107,11 +107,11 @@ is compiled by other people, use the =:acound-compile= argument:
   Functions =hook-into-swank= and =unhook-from-swank= enable/disable
   this SLIME support.
 
-  To have SIME support enabled automatically add the following
-  to your /~,/.swank.lisp/:
+  To have the SIME support enabled automatically add the following
+  to your /~/.swank.lisp/:
 #+BEGIN_SRC common-lisp
   (when (find-package :local-package-aliases)
-    (funcall (read-from-string "local-package-aliases::hook-into-swank")))
+    (funcall (read-from-string "local-package-aliases:hook-into-swank")))
 #+END_SRC
 
 * Other Package Aliasing Approaches
