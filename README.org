@@ -7,16 +7,16 @@
 #+BEGIN_SRC common-lisp
   (defpackage com.my-company.some-library
     (:use cl)
-    (:export :func))
+    (:export #:func))
 
-  (in-package :com.my-company.some-library)
+  (in-package #:com.my-company.some-library)
 
   (defun func () "hello")
 
 
 
   (defpackage some-application (:use cl))
-  (in-package :some-application)
+  (in-package #:some-application)
   (local-package-aliases:set #:com.my-company.some-library #:lib
                              #:some.other.library #:olib)
 
@@ -29,7 +29,7 @@
   ;; The aliases are not global, they are scoped only to the package
   ;; where they are defined:
 
-  (in-package :cl-user)
+  (in-package #:cl-user)
   (read-from-string "$lib:func")
   ;; => ERROR There is no package named "$LIB" .
 
@@ -38,7 +38,7 @@
   ;; is on the beginning of a token.
   ;; $ in the middle of a token has no special
   ;; effect.
-  (in-package :some-application)
+  (in-package #:some-application)
 
   (read-from-string "just-a-$-symbol")
   ;; => JUST-A-$-SYMBOL
@@ -52,7 +52,7 @@
   (read-from-string "$-a-sybmol")
   ;; => $-A-SYMBOL
 
-  (in-package :cl-user)
+  (in-package #:cl-user)
   (read-from-string "$-a-sybmol")
   ;; => $-A-SYMBOL
 
