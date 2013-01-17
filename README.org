@@ -113,6 +113,12 @@ is compiled by other people, use the =:acound-compile= argument:
   (when (find-package :local-package-aliases)
     (funcall (read-from-string "local-package-aliases:hook-into-swank")))
 #+END_SRC
+  Alternatively, use this in ~/.emacs:
+   (add-hook 'slime-connected-hook
+             (lambda ()
+               (slime-eval '(cl:when (cl:find-package :local-package-aliases)
+                               (cl:funcall (cl:read-from-string "local-package-aliases:hook-into-swank"))))))
+
 
 * Other Package Aliasing Approaches
   Here is some information, solutions and ideas I encountered recently
