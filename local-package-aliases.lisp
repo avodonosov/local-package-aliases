@@ -202,7 +202,7 @@ function parameters help and other SLIME support."
   (format t "~&; swank patched by local-package-aliases to provide swank::*around-eval-for-emacs-hook*~%")
   (pushnew 'with-aliases-as-nicknames-hook
            (symbol-value (read-from-string "swank::*around-eval-for-emacs-hook*")))
-  (format t "~&; installed swank::*around-eval-for-emacs-hook* handler to temporary add aliases local to swank::*buffer-package* as nicknames to the corresponding packages~%"))
+  (format t "~&; installed swank::*around-eval-for-emacs-hook* handler to temporary add aliases local to swank::*buffer-package* as nicknames to their corresponding packages~%"))
 
 (defun unhook-from-swank ()
   "Returns T if the hook handler was uninstalled, and NIL otherwize."
