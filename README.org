@@ -108,7 +108,7 @@ is compiled by other people, use the =:acound-compile= argument:
   this SLIME support.
 
   To have the SIME support enabled automatically add the following
-  to your ~/.swank.lisp
+  to your ~/.swank.lisp:
 #+BEGIN_SRC common-lisp
   (when (find-package :local-package-aliases)
     (funcall (read-from-string "local-package-aliases:hook-into-swank")))
