@@ -113,7 +113,7 @@ is compiled by other people, use the =:acound-compile= argument:
   (when (find-package :local-package-aliases)
     (funcall (read-from-string "local-package-aliases:hook-into-swank")))
 #+END_SRC
-  Alternatively, use this in ~/.emacs:
+  Or this in ~/.emacs:
 #+BEGIN_SRC common-lisp
  (add-hook 'slime-connected-hook
            (lambda ()
