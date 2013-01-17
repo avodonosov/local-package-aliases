@@ -60,10 +60,11 @@
 ;;;; Patched eval-for-emacs
 ;;;
 ;;; The only change we did comparing to the original eval-for-emacs
-;;; is wrapping of (EVAL FORM) into (WITHIN-HOOKS (*AROUND-EVAL-FOR-EMACS-HOOK*) ...)
+;;; is wrapping of (EVAL FORM) into
+;;; (WITHIN-HOOKS (*AROUND-EVAL-FOR-EMACS-HOOK*) (EVAL FORM))
 ;;;
 ;;; The code is based on the eval-for-emacs version from slime CVS of 2012-01-16.
-;;; If slime changes this function, we could just copy/paste it again,
+;;; If slime changes this function, we should just copy/paste it again,
 ;;; and again wrap (EVAL FORM) into our hook.
 
 (defun eval-for-emacs (form buffer-package id)
