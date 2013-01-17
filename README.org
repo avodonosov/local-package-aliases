@@ -115,10 +115,10 @@ is compiled by other people, use the =:acound-compile= argument:
 #+END_SRC
   Alternatively, use this in ~/.emacs:
 #+BEGIN_SRC common-lisp
-   (add-hook 'slime-connected-hook
-             (lambda ()
-               (slime-eval '(cl:when (cl:find-package :local-package-aliases)
-                               (cl:funcall (cl:read-from-string "local-package-aliases:hook-into-swank"))))))
+ (add-hook 'slime-connected-hook
+           (lambda ()
+             (slime-eval '(cl:when (cl:find-package :local-package-aliases)
+                             (cl:funcall (cl:read-from-string "local-package-aliases:hook-into-swank"))))))
 #+END_SRC
 
 
