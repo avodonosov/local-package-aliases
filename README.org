@@ -4,7 +4,7 @@
   alias mapping, and does not affect other code).
   Portable.
   
-#+BEGIN_SRC lisp
+#+BEGIN_SRC common-lisp
   (defpackage com.my-company.some-library
     (:use cl)
     (:export :func))
@@ -87,6 +87,33 @@ is compiled by other people, use the =:acound-compile= argument:
 ;      :components ((:file "some-application")))
 #+END_SRC
 
+* SLIME support
+  SLIME assumes standard readtable when meets tokens like =pkg:symb=
+  therefore it doesn't undersdand our aliases.
+
+  In result SLIME symbol completion, slime-edit-definition, function
+  argument list hints do not work out of box for aliased tokens like =$lib:func=.
+
+  The solution we found is to hook into swank, and wrap evaluation
+  of every SLIME request with temporary adding the aliases defined
+  in the current package as nicknames for their corresponding packages.
+  So, during dynamic extend of every slime request evaluatoin,
+  the aliases become real package nicknames and SLIME can handle them
+  as usually.
+
+  It must be noted that this solution is not entierly transarent:
+  =(find-package :$lib)= will find the package when invoked
+  from SLIME, but of course during normal run-time it won't work.
+
+  Functions =hook-into-swank= and =unhook-from-swank= enable/disable
+  this SLIME support.
+
+  To have SIME support enabled automatically add the following
+  to your /~\/.swank.lisp/:
+#+BEGIN_SRC common-lisp
+  (when (find-package :local-package-aliases)
+    (funcall (read-from-string "local-package-aliases::hook-into-swank")))
+#+END_SRC
 
 * Other Package Aliasing Approaches
   Here is some information, solutions and ideas I encountered recently
@@ -173,11 +200,6 @@ is compiled by other people, use the =:acound-compile= argument:
    every time you switch projects or subsystems during or at the beginning
    of Lisp session.
    
-   On the other hand, when package renaming is applied during Lisp session,
-   SLIME symbol completion will work out of box for the new package names;
-   while for local-package-aliases solution with $ reader macro
-   SLIME symbol completion doesn't work (currently at least).
-
    In my opinion a form of package aliasing deserves to be
    introduced as a CL extension into all implementations.
 
