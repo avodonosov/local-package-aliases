@@ -4,7 +4,7 @@
 
 (asdf:defsystem #:local-package-aliases
   :description "Allows to define inside of a package aliases to refer other packages.
-Provides a reader macro =$= to use aliases (active only in packages having
+Provides a reader macro $ to use the aliases (active only in packages having
 alias mapping, and does not affect other code).
 Portable."
   :license "MIT"
