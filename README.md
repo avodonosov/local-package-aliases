@@ -64,7 +64,7 @@ Portable.
   ;; purposes.
 ```
 
-To enable the $ macro in your lisp session (may be put into
+To enable the `$` macro in your lisp session (may be put into
 the lisp initialization file):
 ``` common-lisp
   (local-package-aliases:set-aliasing-reader *readtable*)
