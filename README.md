@@ -7,67 +7,69 @@ alias mapping, and does not affect other code).
 Portable.
   
 ``` common-lisp
-  (defpackage com.my-company.some-library
-    (:use cl)
-    (:export #:func))
+(ql:quickload :local-package-aliases)
 
-  (in-package #:com.my-company.some-library)
+(defpackage com.my-company.some-library
+  (:use cl)
+  (:export #:func))
 
-  (defun func () "hello")
+(in-package #:com.my-company.some-library)
+
+(defun func () "hello")
 
 
 
-  (defpackage some-application (:use cl))
-  (in-package #:some-application)
-  (local-package-aliases:set #:com.my-company.some-library #:lib
-                             #:some.other.library #:olib)
+(defpackage some-application (:use cl))
+(in-package #:some-application)
+(local-package-aliases:set #:com.my-company.some-library #:lib
+                           #:some.other.library #:olib)
 
-  (read-from-string "$lib:func")
-  ;; => COM.MY-COMPANY.SOME-LIBRARY:FUNC
+(read-from-string "$lib:func")
+;; => COM.MY-COMPANY.SOME-LIBRARY:FUNC
 
-  ($lib:func)
-  ;; => "hello"
+($lib:func)
+;; => "hello"
 
-  ;; The aliases are not global, they are scoped only to the package
-  ;; where they are defined:
+;; The aliases are not global, they are scoped only to the package
+;; where they are defined:
 
-  (in-package #:cl-user)
-  (read-from-string "$lib:func")
-  ;; => ERROR There is no package named "$LIB" .
+(in-package #:cl-user)
+(read-from-string "$lib:func")
+;; => ERROR There is no package named "$LIB" .
 
-  ;; The $ reader macro is non-terminating,
-  ;; therefore it is only activated when $
-  ;; is on the beginning of a token.
-  ;; $ in the middle of a token has no special
-  ;; effect.
-  (in-package #:some-application)
+;; The $ reader macro is non-terminating,
+;; therefore it is only activated when $
+;; is on the beginning of a token.
+;; $ in the middle of a token has no special
+;; effect.
+(in-package #:some-application)
 
-  (read-from-string "just-a-$-symbol")
-  ;; => JUST-A-$-SYMBOL
+(read-from-string "just-a-$-symbol")
+;; => JUST-A-$-SYMBOL
 
-  ;; The $ designates alias reference only if the
-  ;; current package has alias mapping defined. If there
-  ;; is no alias mapping in the current package, then
-  ;; $ is interpreted as usually:
+;; The $ designates alias reference only if the
+;; current package has alias mapping defined. If there
+;; is no alias mapping in the current package, then
+;; $ is interpreted as usually:
 
-  (local-package-aliases:set) ;; installs empty aliases mapping
-  (read-from-string "$-a-sybmol")
-  ;; => $-A-SYMBOL
+(local-package-aliases:set) ;; installs empty aliases mapping
+(read-from-string "$-a-sybmol")
+;; => $-A-SYMBOL
 
-  (in-package #:cl-user)
-  (read-from-string "$-a-sybmol")
-  ;; => $-A-SYMBOL
+(in-package #:cl-user)
+(read-from-string "$-a-sybmol")
+;; => $-A-SYMBOL
 
-  ;; Therefore it is safe to enable $ macro
-  ;; globally, for example from Lisp init file,
-  ;; without affecting the code using $ for other
-  ;; purposes.
+;; Therefore it is safe to enable $ macro
+;; globally, for example from Lisp init file,
+;; without affecting the code using $ for other
+;; purposes.
 ```
 
 To enable the `$` macro in your lisp session (may be put into
 the lisp initialization file):
 ``` common-lisp
-  (local-package-aliases:set-aliasing-reader *readtable*)
+(local-package-aliases:set-aliasing-reader *readtable*)
 ```
 
 Another macro character than `$` may be used. 
@@ -76,18 +78,18 @@ for parameters description.
 
 To return to the standard syntax:
 ``` common-lisp
-  (set-syntax-from-char #\$ #\$ *readtable* (copy-readtable nil))
+(set-syntax-from-char #\$ #\$ *readtable* (copy-readtable nil))
 ```
 
 To make the `$` macro enabled when your ASDF system
 is compiled by other people, use the `:acound-compile` argument:
 
 ``` common-lisp
-    (asdf:defsystem #:some-application
-      :depends-on (#:local-package-aliases
-                   #:com.my-company.some-library)
-      :around-compile "local-package-aliases:call-with-aliasing-readtable"
-      :components ((:file "some-application")))
+(asdf:defsystem #:some-application
+  :depends-on (#:local-package-aliases
+               #:com.my-company.some-library)
+  :around-compile "local-package-aliases:call-with-aliasing-readtable"
+  :components ((:file "some-application")))
 ```
 
 SLIME support
@@ -115,15 +117,15 @@ this SLIME support.
 To have the SIME support enabled automatically add the following
 to your _~/.swank.lisp_:
 ``` common-lisp
-  (when (find-package :local-package-aliases)
-    (funcall (read-from-string "local-package-aliases:hook-into-swank")))
+(when (find-package :local-package-aliases)
+  (funcall (read-from-string "local-package-aliases:hook-into-swank")))
 ```
 Or this in ~/.emacs:
 ``` common-lisp
- (add-hook 'slime-connected-hook
-           (lambda ()
-             (slime-eval '(cl:when (cl:find-package :local-package-aliases)
-                             (cl:funcall (cl:read-from-string "local-package-aliases:hook-into-swank"))))))
+(add-hook 'slime-connected-hook
+          (lambda ()
+            (slime-eval '(cl:when (cl:find-package :local-package-aliases)
+                            (cl:funcall (cl:read-from-string "local-package-aliases:hook-into-swank"))))))
 ```
 
 
