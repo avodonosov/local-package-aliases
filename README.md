@@ -108,8 +108,10 @@ So, during dynamic extent of every slime request, the aliases become
 real package nicknames and SLIME can handle them as usually.
 
 It must be noted that this solution is not entierly transarent:
-`(find-package :$lib)` will find the package when invoked
-from SLIME, but of course during normal run-time it won't work.
+when working from SLIME not only reader understands the aliases,
+but also `(find-package :$lib)` will find the package.
+But of course during normal run-time only reader knows about
+the aliases.
 
 Functions `hook-into-swank` and `unhook-from-swank` enable/disable
 this SLIME support.
