@@ -30,7 +30,7 @@ Portable.
 ($lib:func)
 ;; => "hello"
 
-;; The aliases are not global, they are scoped only to the package
+;; The aliases are not global; they are scoped only to the package
 ;; where they are defined:
 
 (in-package #:cl-user)
@@ -48,11 +48,11 @@ Portable.
 ;; => JUST-A-$-SYMBOL
 
 ;; The $ designates alias reference only if the
-;; current package has alias mapping defined. If there
+;; current package has defined mappings. If there
 ;; is no alias mapping in the current package, then
-;; $ is interpreted as usually:
+;; $ is interpreted as usual:
 
-(local-package-aliases:set) ;; installs empty aliases mapping
+(local-package-aliases:set) ; installs an empty alias mapping
 (read-from-string "$-a-sybmol")
 ;; => $-A-SYMBOL
 
@@ -60,10 +60,9 @@ Portable.
 (read-from-string "$-a-sybmol")
 ;; => $-A-SYMBOL
 
-;; Therefore it is safe to enable $ macro
-;; globally, for example from Lisp init file,
-;; without affecting the code using $ for other
-;; purposes.
+;; It is safe to enable the $ macro globally,
+;; for example from an init file, and will not
+;; affect code that uses $ for other purposes.
 ```
 
 To enable the `$` macro in your lisp session (may be put into
@@ -72,7 +71,7 @@ the lisp initialization file):
 (local-package-aliases:set-aliasing-reader *readtable*)
 ```
 
-Another macro character than `$` may be used. 
+A macro character other than `$` may be used.
 See the docstring for `local-package-aliases:set-aliasing-reader`
 for parameters description.
 
@@ -81,8 +80,8 @@ To return to the standard syntax:
 (set-syntax-from-char #\$ #\$ *readtable* (copy-readtable nil))
 ```
 
-To make the `$` macro enabled when your ASDF system
-is compiled by other people, use the `:acound-compile` argument:
+To enable the `$` macro during compilation of ASDF systems,
+use the `:around-compile` argument:
 
 ``` common-lisp
 (asdf:defsystem #:some-application
@@ -95,28 +94,26 @@ is compiled by other people, use the `:acound-compile` argument:
 SLIME support
 -------------
 
-SLIME assumes standard readtable when meets tokens like `pkg:symb`
-and doesn't undersdand our aliases.
-
-In result SLIME symbol completion, slime-edit-definition, function
-arguments hints do not work out of box for aliased tokens like `$lib:func`.
+SLIME uses the standard readtable for tokens such as `pkg:symb`
+and doesn't undersdand our aliases; thus, symbol completion,
+slime-edit-definition, and argument hints do not work out of
+the box for aliased tokens like `$lib:func`.
 
 The solution we found is to hook into swank, and wrap evaluation
-of every SLIME request with temporary adding the aliases defined
+of every SLIME request with temporary binding of the aliases defined
 in the current package as nicknames for their corresponding packages.
 So, during dynamic extent of every slime request, the aliases become
 real package nicknames and SLIME can handle them as usually.
 
-It must be noted that this solution is not entierly transarent:
-when working from SLIME not only reader understands the aliases,
-but also `(find-package :$lib)` will find the package.
-But of course during normal run-time only reader knows about
-the aliases.
+It must be noted that this solution is not entirely transparent:
+when working from SLIME not only the reader follows the aliases,
+but also `(find-package :$lib)` will find the package. During
+normal run-time, only the reader knows about the aliases.
 
 Functions `hook-into-swank` and `unhook-from-swank` enable/disable
 this SLIME support.
 
-To have the SIME support enabled automatically add the following
+To have the SLIME support enabled automatically add the following
 to your _~/.swank.lisp_:
 ``` common-lisp
 (when (find-package :local-package-aliases)
@@ -137,14 +134,14 @@ Other Package Aliasing Approaches
 Here is some information, solutions and ideas I encountered recently
 related to package aliases.
   
-The solutions vary in:
- - whether the aliases only honored by reader, or they also
-   affect functions like `cl:find-package`, `cl:find-symbol`
- - is the solution a portable Common Lisp or it relies on patches
-   or language extensions
- - whether the aliases are scoped to a package, or somehow else
- - whether the solution is specific about aliasing scheme,
-   or it's a lower-level tool allowing to build various
+The solutions vary in whether:
+ - the aliases are only honored by the reader, or they
+   also affect functions like `cl:find-package`, `cl:find-symbol`;
+ - the solution is portable Common Lisp, or relies on patches
+   or language extensions;
+ - the aliases are scoped to a package, or somehow else;
+ - the solution is specific about aliasing scheme,
+   or is a lower-level tool allowing to build various
    aliasing approaches.
 
 cl-package-aliases - http://www.cliki.net/cl-package-aliases
@@ -159,25 +156,25 @@ package-renaming - http://common-lisp.net/gitweb?p=users/frideau/package-renamin
 
 Tools based on `cl:rename-package` to temporary give packages
 desired short names/nicknames. Portable. To make the renaming
-local it is expected to be used with the ASDF's `:acound-compile` argument.
+local it is expected to be used with the ASDF's `:around-compile` argument.
 
 CL language extensions
 ----------------------
 
 There were discussions to develop a CL language extension
 and propose it to CL vendors. The extension might be
-a hook called by CL to resolve package prefix. I.e. when
-CL encounteres a token like `pkg:symbol` it calls the hook
-with "pkg" string and the hook should return a package object
+a hook called by CL to resolve package prefix, _i.e._ when
+encountering a token like `pkg:symbol`, call the hook with
+string "pkg", and the hook should return a package object,
 or maybe just a string designating real package name.
 Such hook may be called `*package-prefix-resolver*`.
 
 Alternatively the hook may be passed the full token "pkg:symbol"
-and be responsible to resolve both package name and symbol.
+and resolve names for both packages and symbols.
 Such hook may be named `*parse-token-hook*`.
 
 There were considerations whether these hooks should be called only
-form reader or by `cl:find-sybmol` and other functions.
+from the reader, or also by `cl:find-sybmol` and other functions.
 Sketch for a CDR: http://paste.lisp.org/display/133561
 Discussions on the #lisp irc channel: 
 http://ccl.clozure.com/irc-logs/lisp/2012-11/lisp-2012.11.05.txt
@@ -185,8 +182,8 @@ http://ccl.clozure.com/irc-logs/lisp/2013-01/lisp-2013.01.06.txt
 
 One more possible language extension would be to allow to
 fully substitute the lisp reader. In this case there might
-be are public library implementing fully compliant CL reader.
-Lisp implementation will delegate functions like `cl:read`,
+be a public library implementing fully compliant CL reader.
+Lisp implementations will delegate functions like `cl:read`,
 `cl:read-delimeted-list`, `cl:set-syntax-from-char`
 and others to the pluggable reader. The reader by default
 honors `cl:*readtable*`, `cl:*package*` and other variables,
@@ -196,23 +193,23 @@ It must be noted that interface between CL and such a pluggable
 reader will consist of many functions. Also, the reader should
 come with it's own implementations for all the reader macros,
 because standard reader macros are not implemented in terms
-of public `cl:*` functions, but use private, not-exported
-functions of the CL reader, such as `reat-token`.
+of public `cl:*` functions, but use functions internal to the
+CL reader's implementation, such as `read-token`.
 
-If speak about pluggable reader, it's necessary to mention
+If speaking about pluggable reader, it's necessary to mention
 the reader-interception project:
 http://common-lisp.net/cgi-bin/gitweb.cgi?p=users/frideau/reader-interception.git;a=tree;js=1
 
 It's a portable solution allowing to plug-in your own reader.
 It relies on the trick to look at the first character of input,
-configure this character temporary as a reader macro, and
+configure this character temporarily as a reader macro, and
 then this reader macro may read the full input stream according
 to any rules.
 
 Conclusion
 ----------
 
-The local-package-aliases approach with reader macro seems
+The local-package-aliases approach with a reader macro seems
 to be a decent approach, especially as the syntax change
 only affects packages with explicitly configured aliasing
 maps.
@@ -220,8 +217,8 @@ maps.
 It is comparable by convenience with package-renaming.
 
 Advantage of local-package-aliases is that it may be enabled
-once and forewer in the Lisp initialization file, while
-packag-renaming will require you to manually rename packages
+once and forever in the Lisp initialization file, while
+package-renaming will require you to manually rename packages
 every time you switch projects or subsystems during or at the beginning
 of Lisp session.
 
@@ -230,20 +227,20 @@ introduced as a CL extension into all implementations.
 
 The language extension may be specific, targeting only package
 aliases (like cl-package-aliases project proposes).
-It will encourage consistent coding practice accross
+It will encourage consistent coding practice across
 all the CL programs.
 
 To simplify adoption of the extension by the CL implementations,
-I believe it would be enought to have aliasing only in reader.
-Calls to `cl:find-package` are rare, we can pass
-full package names to it. On the other hand, if `cl:find-package`
-is unaware of aliases, it may complicate support by SLIME.
+I believe it should be enough to have aliasing only in reader.
+Calls to `cl:find-package` are rare, and we can pass full package
+names to it; on the other hand, if `cl:find-package` is unaware
+of aliases, it may complicate support by SLIME.
 
-As for more low-level language extenstions, like pluggable
+As for more low-level language extensions, like pluggable
 reader or various hooks, I would welcome them too,
 just to make Lisp more programmable and allow programmers
-to solve their needs simpler.
-   
+to solve their needs simply.
+
 Author
 ------
   Anton Vodonosov, avodonosov@yandex.ru
