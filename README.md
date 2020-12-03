@@ -60,13 +60,20 @@ Portable.
 (read-from-string "$-a-sybmol")
 ;; => $-A-SYMBOL
 
-;; It is safe to enable the $ macro globally,
-;; for example from an init file, and will not
-;; affect code that uses $ for other purposes.
+;; However, CCL and CLISP signal an error when read
+;; uninterned symbols whose name starts with a
+;; macro-character, in our case $. For example #:$abcd.
+;; See https://lists.clozure.com/pipermail/openmcl-devel/2013-February/009911.html
+;; Therefore we do not recommend enabling the
+;; $ macro globally, from your lisp implementation
+;; init file - libraries that have such uninterned symbols
+;; in their code will fail to parse.
+;;
+;; But for your own code, don't use symbols like #:$abcd
+;;;and local-package-aliases will work.
 ```
 
-To enable the `$` macro in your lisp session (may be put into
-the lisp initialization file):
+To enable the `$` macro in your lisp session:
 ``` common-lisp
 (local-package-aliases:set-aliasing-reader *readtable*)
 ```
@@ -94,7 +101,7 @@ use the `:around-compile` argument:
 SLIME support
 -------------
 
-SLIME uses the standard readtable for tokens such as `pkg:symb`
+SLIME uses the standard readtable rules for tokens such as `pkg:symb`
 and doesn't undersdand our aliases; thus, symbol completion,
 slime-edit-definition, and argument hints do not work out of
 the box for aliased tokens like `$lib:func`.
@@ -119,7 +126,7 @@ to your _~/.swank.lisp_:
 (when (find-package :local-package-aliases)
   (funcall (read-from-string "local-package-aliases:hook-into-swank")))
 ```
-Or this in ~/.emacs:
+Or this in _~/.emacs_:
 ``` common-lisp
 (add-hook 'slime-connected-hook
           (lambda ()
@@ -210,17 +217,9 @@ Conclusion
 ----------
 
 The local-package-aliases approach with a reader macro seems
-to be a decent approach, especially as the syntax change
-only affects packages with explicitly configured aliasing
-maps.
+to be a decent approach.
 
 It is comparable by convenience with package-renaming.
-
-Advantage of local-package-aliases is that it may be enabled
-once and forever in the Lisp initialization file, while
-package-renaming will require you to manually rename packages
-every time you switch projects or subsystems during or at the beginning
-of Lisp session.
 
 In my opinion a form of package aliasing deserves to be
 introduced as a CL extension into all implementations.
